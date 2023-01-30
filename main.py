@@ -50,7 +50,6 @@
 # print(d)
 from game import Game
 
-MAX = 21
 
 def intro():
     q = input("Hi! Do you want to start? (y/n)\n")
@@ -60,12 +59,12 @@ def intro():
     elif q == "n":
         exit(1)
     else:
-        print("Ty pidoras")
+        print("Type 'y' or 'n'")
         intro()
 
 
 if __name__ == '__main__':
     g = Game()
     intro()
-    g.starting()
-    g.choice()
+    g.start()
+    g.process()
