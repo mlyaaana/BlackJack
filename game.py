@@ -1,91 +1,104 @@
-from dealer import Dealer
 from deck import Deck
 from player import Player
 
 
 class Game:
+    m = 21
+    aces = ["♥️A", "♦️A", "♣️A", "♠️A"]
+
     def __init__(self):
         self.deck = Deck()
-        self.player = Player()
-        self.dealer = Dealer()
+        self.player = Player(input("Enter your name\n"))
+        self.dealer = Player("Dealer")
 
     def start(self):
         self.player.add_card(self.deck.get_card())
         tmp1 = self.player.add_card(self.deck.get_card())
+        p_total = self.ace(tmp1, self.player)
         p_cards = ", ".join(map(lambda card: str(card), tmp1))
-        p_total = self.player.total()
 
         tmp2 = self.dealer.add_card(self.deck.get_card())
+        d_total = self.ace(tmp2, self.dealer)
         d_cards = ", ".join(map(lambda card: str(card), tmp2))
-        d_total = self.dealer.total()
 
-        print(f"Your cards: {p_cards}; {p_total}")
-        print(f"Dealer's cards: {d_cards}; {d_total}")
+        print(f"{self.player.name}: {p_cards}; {p_total}")
+        print(f"{self.dealer.name}: {d_cards}; {d_total}")
+
         if self.blackjack(tmp1, p_total):
-            print("You are lucky!\nBLACKJACK!")
+            print("\nYou are lucky!\nBLACKJACK!")
             self.play_again()
 
     def process(self):
-        p_total = 0
-        d_total = 0
-        mx = 21
-        while p_total < mx:
-            q = input("Pass or add one? (p/a)\n")
-            if q == "a":
+        p_total, d_total = 0, 0
+
+        while p_total < self.m:
+            q = input("Hit or stand? (h/s)\n")
+            if q == "h":
                 tmp = self.player.add_card(self.deck.get_card())
+                p_total = self.ace(tmp, self.player)
                 p = ", ".join(map(lambda card: str(card), tmp))
-                p_total = self.player.total()
-                print(f"Your cards: {p}; {p_total}")
-            elif q == "p":
+                print(f"{self.player.name}: {p}; {p_total}")
+            elif q == "s":
                 p_total = self.player.total()
                 break
             else:
-                print("Type 'p' or 'a'")
+                print("Enter 'h' or 's'")
                 self.process()
 
         while d_total <= 16:
             tmp = self.dealer.add_card(self.deck.get_card())
+            d_total = self.ace(tmp, self.dealer)
             d = ", ".join(map(lambda card: str(card), tmp))
-            d_total = self.dealer.total()
-            print(f"Dealer's cards: {d}; {d_total}")
+            print(f"{self.dealer.name}: {d}; {d_total}")
+            if p_total > self.m:
+                break
             if self.blackjack(tmp, d_total):
-                print("Suddenly, dealer has blackjack\nDEFEAT")
+                print("\nSuddenly, dealer has blackjack\nDEFEAT")
                 self.play_again()
 
         self.conclusion(p_total, d_total)
 
-    def blackjack(self, l, total):
-        if len(l) == 2 and total == 21:
+    def blackjack(self, hand, total):
+        if len(hand) == 2 and total == self.m:
             return True
-            # print("You are lucky!\nBLACKJACK!")
-            # print("Suddenly, dealer has blackjack\nDEFEAT")
 
     def conclusion(self, p_total, d_total):
-        m = 21
-        if p_total < d_total <= m:
-            print(p_total, d_total, p_total < d_total)
-            print("Dealer has a better score\nDEFEAT")
-        elif p_total > m:
-            print("Too much\nDEFEAT")
-        elif m >= p_total > d_total or ((m >= p_total > d_total) and (d_total > m)):
-            print("WIN!")
+        if p_total < d_total <= self.m:
+            print("\nDealer has a better score\nDEFEAT")
+        elif p_total > self.m:
+            print("\nToo much\nDEFEAT")
+        elif self.m >= p_total > d_total or p_total < d_total > self.m:
+            print("\nWIN!")
         else:
-            print("DRAW")
+            print("\nDRAW")
         self.play_again()
 
     def play_again(self):
-        q = input("Play again? (y/n)\n")
+        q = input("\nPlay again? (y/n)\n")
         if q == "y":
             self.reset()
             self.start()
             self.process()
         elif q == 'n':
+            print("Thanks for playing!")
             exit(1)
         else:
-            print("Type 'y' or 'n'")
+            print("Enter 'y' or 'n'")
             self.play_again()
 
     def reset(self):
         self.deck = Deck()
         self.player.hand = []
         self.dealer.hand = []
+
+    def ace(self, hand, player):
+        total = player.total()
+        for card in hand:
+            if str(card) in self.aces:
+                t = player.total() + 10
+                if t <= self.m:
+                    card.points = 11
+                    return player.total()
+                else:
+                    return total
+        return total

@@ -2,7 +2,8 @@ from card import Card
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.hand = []
 
     def add_card(self, card: Card):

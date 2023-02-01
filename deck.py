@@ -15,7 +15,7 @@ class Deck:
         deck = []
         for suit, rank in product(self.suits, self.ranks):
             if rank == "A":
-                points = 11
+                points = 1
             elif rank in ["2", "3", "4", "5", "6", "7", "8", "9", "10"]:
                 points = int(rank)
             else:
@@ -29,7 +29,7 @@ class Deck:
         return self.deck.pop(0)
 
     def __str__(self):
-        l = []
+        deck = []
         for i in self.deck:
-            l.append(str(i))
-        return ", ".join(l)
+            deck.append(str(i))
+        return ", ".join(deck)
