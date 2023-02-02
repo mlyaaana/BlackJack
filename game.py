@@ -1,10 +1,11 @@
 from deck import Deck
 from player import Player
+from util import printer
 
 
 class Game:
     m = 21
-    aces = ["♥️A", "♦️A", "♣️A", "♠️A"]
+    dealer_max = 16
 
     def __init__(self):
         self.deck = Deck()
@@ -13,57 +14,48 @@ class Game:
 
     def start(self):
         self.player.add_card(self.deck.get_card())
-        tmp1 = self.player.add_card(self.deck.get_card())
-        p_total = self.ace(tmp1, self.player)
-        p_cards = ", ".join(map(lambda card: str(card), tmp1))
+        p_total, p_cards, p_hand = self.give_card(self.player)
+        d_total, d_cards, d_hand = self.give_card(self.dealer)
 
-        tmp2 = self.dealer.add_card(self.deck.get_card())
-        d_total = self.ace(tmp2, self.dealer)
-        d_cards = ", ".join(map(lambda card: str(card), tmp2))
-
-        print(f"{self.player.name}: {p_cards}; {p_total}")
-        print(f"{self.dealer.name}: {d_cards}; {d_total}")
-
-        if self.blackjack(tmp1, p_total):
-            print("\nYou are lucky!\nBLACKJACK!")
-            self.play_again()
+        printer(self.player, p_cards, p_total)
+        printer(self.dealer, d_cards, d_total)
 
     def process(self):
         p_total, d_total = 0, 0
+        p_hand, d_hand = [], []
 
         while p_total < self.m:
             q = input("Hit or stand? (h/s)\n")
             if q == "h":
-                tmp = self.player.add_card(self.deck.get_card())
-                p_total = self.ace(tmp, self.player)
-                p = ", ".join(map(lambda card: str(card), tmp))
-                print(f"{self.player.name}: {p}; {p_total}")
+                p_total, p_cards, p_hand = self.give_card(self.player)
+                printer(self.player, p_cards, p_total)
             elif q == "s":
-                p_total = self.player.total()
+                # мб нужен вызов ace()
+                p_total = self.player.total_up()
                 break
             else:
                 print("Enter 'h' or 's'")
-                self.process()
 
-        while d_total <= 16:
-            tmp = self.dealer.add_card(self.deck.get_card())
-            d_total = self.ace(tmp, self.dealer)
-            d = ", ".join(map(lambda card: str(card), tmp))
-            print(f"{self.dealer.name}: {d}; {d_total}")
-            if p_total > self.m:
+        while d_total <= self.dealer_max:
+            d_total, d_cards, d_hand = self.give_card(self.dealer)
+            printer(self.dealer, d_cards, d_total)
+            if p_total > self.m or p_total == 21:
                 break
-            if self.blackjack(tmp, d_total):
-                print("\nSuddenly, dealer has blackjack\nDEFEAT")
-                self.play_again()
 
-        self.conclusion(p_total, d_total)
+        self.conclusion(p_total, d_total, p_hand, d_hand)
 
-    def blackjack(self, hand, total):
-        if len(hand) == 2 and total == self.m:
-            return True
+    def give_card(self, player):
+        hand = player.add_card(self.deck.get_card())
+        total = player.total_up()
+        cards = ", ".join(map(lambda card: str(card), hand))
+        return total, cards, hand
 
-    def conclusion(self, p_total, d_total):
-        if p_total < d_total <= self.m:
+    def conclusion(self, p_total, d_total, p_hand, d_hand):
+        if len(p_hand) == 2 and p_total == self.m:
+            print("\nYou are lucky!\nBLACKJACK!")
+        elif len(d_hand) == 2 and d_total == self.m:
+            print("\nSuddenly, dealer has blackjack\nDEFEAT")
+        elif p_total < d_total <= self.m:
             print("\nDealer has a better score\nDEFEAT")
         elif p_total > self.m:
             print("\nToo much\nDEFEAT")
@@ -90,15 +82,15 @@ class Game:
         self.deck = Deck()
         self.player.hand = []
         self.dealer.hand = []
-
-    def ace(self, hand, player):
-        total = player.total()
-        for card in hand:
-            if str(card) in self.aces:
-                t = player.total() + 10
-                if t <= self.m:
-                    card.points = 11
-                    return player.total()
-                else:
-                    return total
-        return total
+    #
+    # def ace(self, hand, player):
+    #     total = player.total()
+    #     for card in hand:
+    #         if card.rank == "A" in self.aces:
+    #             t = player.total() + 10
+    #             if t <= self.m:
+    #                 card.points = 11
+    #                 return player.total()
+    #             else:
+    #                 return total
+    #     return total
